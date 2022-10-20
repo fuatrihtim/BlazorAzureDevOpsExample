@@ -15,17 +15,27 @@ variables:
   buildConfiguration: 'Release'
 
 steps:
-- task: VSBuild@1
+- task: DotNetCoreCLI@2
   inputs:
-    solution: '$(solution)'
-    msbuildArgs: '/p:DeployOnBuild=true /p:WebPublishMethod=Package /p:PackageAsSingleFile=true /p:SkipInvalidConfigurations=true /p:PackageLocation="$(build.artifactStagingDirectory)"'
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+    command: restore
+    projects: "**/*.csproj"
 
-- task: VSTest@2
+- task: DotNetCoreCLI@2
+  displayName: Build
   inputs:
-    platform: '$(buildPlatform)'
-    configuration: '$(buildConfiguration)'
+    command: build
+    projects: "**/*.csproj"
+    arguments: "--configuration $(buildConfiguration)"
+
+- task: DotNetCoreCLI@2
+  displayName: Publish Web Api application
+  inputs:
+    command: publish
+    publishWebProjects: false
+    projects: "**/*.csproj"
+    arguments: "-o api/publish --configuration $(buildConfiguration)"
+    modifyOutputPath: false
+    zipAfterPublish: true
 
 - task: AzureWebApp@1
   inputs:
